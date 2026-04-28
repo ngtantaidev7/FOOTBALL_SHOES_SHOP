@@ -27,6 +27,7 @@ export default function ProductDetail() {
   const [tab, setTab] = useState('desc'); // 'desc' | 'reviews'
   const [review, setReview] = useState({ rating: 5, comment: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [showCartModal, setShowCartModal] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -50,7 +51,7 @@ export default function ProductDetail() {
   const handleAddToCart = () => {
     if (!size) return toast.error('Vui lòng chọn size!');
     addItem({ ...product, selectedSize: size }, qty);
-    toast.success(`Đã thêm vào giỏ hàng!`);
+    setShowCartModal(true);
   };
 
   const handleWishlist = async () => {
@@ -100,6 +101,18 @@ export default function ProductDetail() {
       )
     : 0;
 
+  // Create an array of exactly 5 images for the gallery
+  const galleryImages = Array.from({ length: 5 }).map((_, i) => {
+    return product.images[i % product.images.length];
+  });
+
+  // Standardize sizes from 38 to 45
+  const fullSizeRange = [38, 39, 40, 41, 42, 43, 44, 45];
+  const displaySizes = fullSizeRange.map((size) => {
+    const existing = product.sizes.find((s) => s.size === size);
+    return existing ? existing : { size, stock: 0 };
+  });
+
   return (
     <div className='bg-white'>
       <div className='max-w-7xl mx-auto px-6 py-12'>
@@ -108,30 +121,28 @@ export default function ProductDetail() {
           <div>
             <div className='rounded-2xl overflow-hidden bg-zinc-100 aspect-square mb-4'>
               <img
-                src={product.images[imgIdx]}
+                src={galleryImages[imgIdx]}
                 alt={product.name}
-                className='w-full h-full object-cover'
+                className='w-full h-full object-cover mix-blend-multiply'
               />
             </div>
-            {product.images.length > 1 && (
-              <div className='flex gap-3'>
-                {product.images.map((img, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setImgIdx(i)}
-                    className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition ${
-                      imgIdx === i ? 'border-black' : 'border-transparent'
-                    }`}
-                  >
-                    <img
-                      src={img}
-                      alt=''
-                      className='w-full h-full object-cover'
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className='flex gap-3'>
+              {galleryImages.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => setImgIdx(i)}
+                  className={`flex-1 aspect-square rounded-xl overflow-hidden border-2 transition ${
+                    imgIdx === i ? 'border-black' : 'border-transparent'
+                  } bg-zinc-50`}
+                >
+                  <img
+                    src={img}
+                    alt=''
+                    className='w-full h-full object-cover mix-blend-multiply'
+                  />
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* ── Info ───────────────────────────────────────── */}
@@ -192,7 +203,7 @@ export default function ProductDetail() {
             {/* Size */}
             <div className='mb-6'>
               <SizeSelector
-                sizes={product.sizes}
+                sizes={displaySizes}
                 selected={size}
                 onChange={setSize}
               />
@@ -256,9 +267,11 @@ export default function ProductDetail() {
 
         {/* ── Tabs ─────────────────────────────────────────── */}
         <div className='mt-16 border-b border-zinc-200'>
-          <div className='flex gap-8'>
+          <div className='flex gap-8 overflow-x-auto whitespace-nowrap scrollbar-hide'>
             {[
               { key: 'desc', label: 'Mô tả' },
+              { key: 'warranty', label: 'Bảo hành' },
+              { key: 'advice', label: 'Lời khuyên' },
               { key: 'reviews', label: `Đánh giá (${product.numReviews})` },
             ].map((t) => (
               <button
@@ -278,24 +291,69 @@ export default function ProductDetail() {
 
         {/* Description */}
         {tab === 'desc' && (
-          <div className='py-8 max-w-2xl'>
-            <p className='text-zinc-600 leading-relaxed'>
-              {product.description}
-            </p>
-            <div className='mt-6 grid grid-cols-2 gap-4'>
+          <div className='py-8 max-w-4xl'>
+            <div className='bg-white rounded-3xl p-8 border border-zinc-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-10'>
+              <h3 className='text-xl font-black mb-4 flex items-center gap-2'>
+                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Chi tiết sản phẩm
+              </h3>
+              <p className='text-zinc-600 leading-relaxed text-lg'>
+                {product.description}
+              </p>
+            </div>
+
+            <h3 className='text-sm font-black mb-6 uppercase tracking-widest text-zinc-400'>Thông số kỹ thuật</h3>
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6'>
               {[
-                { label: 'Phân khúc', value: product.tier },
-                { label: 'Loại sân', value: product.surfaceType },
-                { label: 'Dòng giày', value: product.category },
-                { label: 'Màu sắc', value: product.color || '—' },
+                { label: 'Phân khúc', value: product.tier, icon: <svg className="w-8 h-8 text-yellow-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg> },
+                { label: 'Loại sân', value: product.surfaceType, icon: <svg className="w-8 h-8 text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg> },
+                { label: 'Dòng giày', value: product.category, icon: <svg className="w-8 h-8 text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> },
+                { label: 'Màu sắc', value: product.color || 'Đa sắc', icon: <svg className="w-8 h-8 text-purple-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg> },
               ].map((r) => (
-                <div key={r.label} className='bg-zinc-50 rounded-xl p-4'>
-                  <p className='text-xs text-zinc-400 uppercase tracking-wide mb-1'>
+                <div key={r.label} className='bg-white rounded-3xl p-6 border border-zinc-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col items-center text-center'>
+                  {r.icon}
+                  <p className='text-xs text-zinc-400 uppercase tracking-widest mb-1 font-bold'>
                     {r.label}
                   </p>
-                  <p className='font-bold text-sm'>{r.value}</p>
+                  <p className='font-black text-lg text-black'>{r.value}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Warranty Tab */}
+        {tab === 'warranty' && (
+          <div className='py-8 max-w-3xl'>
+            <h3 className='text-2xl font-black mb-6'>Chính sách bảo hành & Đổi trả</h3>
+            <ul className='space-y-4 text-zinc-600 leading-relaxed text-lg list-none'>
+              <li className='flex gap-3'><span className='text-green-500'>✔</span> Bảo hành keo đế <strong>3 tháng</strong> kể từ ngày mua.</li>
+              <li className='flex gap-3'><span className='text-green-500'>✔</span> Hỗ trợ đổi size trong vòng <strong>7 ngày</strong> (sản phẩm chưa qua sử dụng).</li>
+              <li className='flex gap-3'><span className='text-green-500'>✔</span> Miễn phí bảo dưỡng, vệ sinh giày 1 lần trong tháng đầu tiên.</li>
+              <li className='flex gap-3'><span className='text-green-500'>✔</span> Cam kết 100% hàng chính hãng. Hoàn tiền x10 nếu phát hiện hàng giả.</li>
+            </ul>
+          </div>
+        )}
+
+        {/* Advice Tab */}
+        {tab === 'advice' && (
+          <div className='py-8 max-w-3xl'>
+            <h3 className='text-2xl font-black mb-6'>Lời khuyên chọn giày</h3>
+            <div className='space-y-6 text-zinc-600 leading-relaxed text-lg'>
+              <div className='bg-blue-50 text-blue-900 p-6 rounded-2xl'>
+                <p className='font-black mb-2 flex items-center gap-2'>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  Dành cho form chân:
+                </p>
+                <p>{product.category === 'Mercurial' || product.category === 'Vapor' ? 'Dòng giày này có form ôm sát, phù hợp với bàn chân thon dài. Nếu bạn có bàn chân bè (to ngang), hãy cân nhắc tăng lên 0.5 - 1 size để thoải mái nhất.' : 'Form giày tương đối thoải mái, phù hợp với hầu hết các kiểu bàn chân (kể cả chân bè nhẹ).'}</p>
+              </div>
+              <div className='bg-green-50 text-green-900 p-6 rounded-2xl'>
+                <p className='font-black mb-2 flex items-center gap-2'>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  Loại sân thi đấu:
+                </p>
+                <p>{product.surfaceType === 'FG' ? 'Đế FG lý tưởng cho sân cỏ tự nhiên hoặc sân cỏ nhân tạo có chất lượng cao, lớp cỏ dày và êm.' : product.surfaceType === 'TF' ? 'Đế TF với đinh dăm cao su bám sân siêu tốt trên mặt sân cỏ nhân tạo tiêu chuẩn ở Việt Nam (5-7 người).' : 'Đế AG chuyên dụng cho sân cỏ nhân tạo, cấu trúc đinh tròn giúp bám sân và xoay chuyển mượt mà.'}</p>
+              </div>
             </div>
           </div>
         )}
@@ -412,6 +470,61 @@ export default function ProductDetail() {
           </div>
         )}
       </div>
+
+      {/* Cart Success Modal */}
+      {showCartModal && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm'>
+          <div className='bg-white w-full max-w-lg shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] relative animate-in fade-in zoom-in-95 duration-200 rounded-3xl border border-zinc-100'>
+            <div className='p-8 pb-6'>
+              <button 
+                onClick={() => setShowCartModal(false)}
+                className='absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 hover:bg-zinc-200 transition text-zinc-500 hover:text-black font-bold'
+              >
+                ✕
+              </button>
+              
+              <h3 className='text-2xl font-black mb-6 text-black flex items-center gap-2'>
+                <svg className="w-7 h-7 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Thêm vào giỏ hàng thành công
+              </h3>
+              
+              <div className='flex gap-5 mb-2'>
+                <div className='w-32 h-32 shrink-0 bg-zinc-50 flex items-center justify-center rounded-2xl border border-zinc-100'>
+                  <img src={galleryImages[0]} alt={product.name} className='w-full h-full object-cover mix-blend-multiply p-2' />
+                </div>
+                <div className='text-sm space-y-1.5 text-black flex-1 py-1'>
+                  <p className='font-bold uppercase text-black text-base leading-snug line-clamp-2'>{product.name}</p>
+                  <p className='text-zinc-500 pt-1'>Mã SP: {product._id.slice(-6).toUpperCase()}-{size}-{qty}</p>
+                  <p className='text-zinc-500'>Size (EU): <strong className='text-black'>{size}</strong></p>
+                  <p className='text-zinc-500'>Số lượng: <strong className='text-black'>{qty}</strong></p>
+                  <p className='font-black text-black text-xl mt-3'>{product.price.toLocaleString('vi-VN')}đ</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className='px-8 pb-8 pt-2 flex flex-col gap-3'>
+              <button 
+                onClick={() => {
+                  setShowCartModal(false);
+                  navigate('/checkout');
+                }}
+                className='w-full bg-black text-white py-4 rounded-2xl font-bold text-base hover:bg-zinc-800 transition shadow-[0_4px_14px_0_rgb(0,0,0,0.39)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.23)] hover:-translate-y-0.5'
+              >
+                Thanh toán ngay
+              </button>
+              <button 
+                onClick={() => {
+                  setShowCartModal(false);
+                  window.dispatchEvent(new Event('open-cart'));
+                }}
+                className='w-full bg-white text-black py-4 rounded-2xl font-bold text-base border-2 border-zinc-200 hover:border-black transition'
+              >
+                Xem giỏ hàng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

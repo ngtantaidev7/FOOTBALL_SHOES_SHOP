@@ -121,7 +121,7 @@ export default function CartDrawer({ open, onClose }) {
                     {(item.price * item.quantity).toLocaleString('vi-VN')}đ
                   </p>
                   <div className='flex items-center justify-between mt-2'>
-                    <div className='flex items-center border border-zinc-300 rounded-full overflow-hidden'>
+                    <div className='flex items-center border border-zinc-300 rounded-full overflow-hidden bg-white text-black'>
                       <button
                         onClick={() =>
                           updateQty(
@@ -130,11 +130,11 @@ export default function CartDrawer({ open, onClose }) {
                             item.quantity - 1,
                           )
                         }
-                        className='w-7 h-7 flex items-center justify-center text-lg font-bold hover:bg-zinc-100 transition'
+                        className='w-7 h-7 flex items-center justify-center text-lg font-bold hover:bg-zinc-200 transition text-black'
                       >
                         −
                       </button>
-                      <span className='w-7 text-center text-sm font-bold'>
+                      <span className='w-7 text-center text-sm font-bold text-black'>
                         {item.quantity}
                       </span>
                       <button
@@ -145,7 +145,7 @@ export default function CartDrawer({ open, onClose }) {
                             item.quantity + 1,
                           )
                         }
-                        className='w-7 h-7 flex items-center justify-center text-lg font-bold hover:bg-zinc-100 transition'
+                        className='w-7 h-7 flex items-center justify-center text-lg font-bold hover:bg-zinc-200 transition text-black'
                       >
                         +
                       </button>

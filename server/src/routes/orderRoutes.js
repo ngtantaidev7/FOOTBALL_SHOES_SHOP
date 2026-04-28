@@ -5,6 +5,7 @@ import {
   getOrderById,
   getAllOrders,
   updateOrderStatus,
+  getOrderStats,
 } from '../controllers/orderController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
@@ -12,6 +13,9 @@ const router = Router();
 
 // Tất cả order routes đều cần đăng nhập
 router.use(protect);
+
+// ── Admin ─────────────────────────────────────────────────────────
+router.get('/stats', authorize('admin'), getOrderStats);
 
 // ── User ──────────────────────────────────────────────────────────
 router.post('/', createOrder);

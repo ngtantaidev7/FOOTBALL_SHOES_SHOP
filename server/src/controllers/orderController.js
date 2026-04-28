@@ -1,6 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import User from '../models/User.js';
 
 // @route  POST /api/orders  — Private
 export const createOrder = asyncHandler(async (req, res) => {
@@ -186,4 +187,85 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
   }
 
   res.json({ success: true, data: order });
+});
+
+// @route  GET /api/orders/stats  — Private/Admin
+export const getOrderStats = asyncHandler(async (req, res) => {
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+  const [
+    revenueDay,
+    revenueMonth,
+    revenueYear,
+    totalOrders,
+    totalCustomers,
+    recentOrders,
+  ] = await Promise.all([
+    // Doanh thu ngày
+    Order.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startOfDay },
+          orderStatus: { $ne: 'cancelled' },
+        },
+      },
+      { $group: { _id: null, total: { $sum: '$totalPrice' } } },
+    ]),
+    // Doanh thu tháng
+    Order.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startOfMonth },
+          orderStatus: { $ne: 'cancelled' },
+        },
+      },
+      { $group: { _id: null, total: { $sum: '$totalPrice' } } },
+    ]),
+    // Doanh thu năm
+    Order.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startOfYear },
+          orderStatus: { $ne: 'cancelled' },
+        },
+      },
+      { $group: { _id: null, total: { $sum: '$totalPrice' } } },
+    ]),
+    Order.countDocuments(),
+    User.countDocuments({ role: 'user' }),
+    Order.find().sort('-createdAt').limit(5).populate('user', 'name'),
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      revenue: {
+        day: revenueDay[0]?.total || 0,
+        month: revenueMonth[0]?.total || 0,
+        year: revenueYear[0]?.total || 0,
+      },
+      orders: {
+        total: totalOrders,
+      },
+      customers: totalCustomers,
+      recentOrders: recentOrders.map((o) => ({
+        id: o._id,
+        customer: o.user?.name || o.shippingInfo.fullName,
+        total: o.totalPrice,
+        status: o.orderStatus,
+        date: o.createdAt,
+        items: o.items.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        shippingInfo: o.shippingInfo,
+        paymentMethod: o.paymentMethod,
+        paymentStatus: o.paymentStatus
+      })),
+    },
+  });
 });

@@ -26,10 +26,10 @@ export default function ProductCard({ product }) {
 
   const tierColor =
     {
-      Elite: 'bg-yellow-400 text-black',
-      Pro: 'bg-blue-500 text-white',
-      Academy: 'bg-zinc-500 text-white',
-    }[tier] || 'bg-zinc-500 text-white';
+      Elite: 'text-yellow-600 border-yellow-600',
+      Pro: 'text-blue-600 border-blue-600',
+      Academy: 'text-zinc-600 border-zinc-600',
+    }[tier] || 'text-zinc-600 border-zinc-600';
 
   const handleQuickAdd = (e) => {
     e.preventDefault();
@@ -41,49 +41,39 @@ export default function ProductCard({ product }) {
   return (
     <Link
       to={`/product/${slug || _id}`}
-      className='group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col'
+      className='group flex flex-col h-full'
     >
-      {/* Image */}
-      <div className='relative overflow-hidden bg-zinc-100 aspect-square'>
+      {/* Image Container */}
+      <div className='relative overflow-hidden bg-zinc-100/60 aspect-square rounded-[2rem] mb-6 transition-all duration-500 group-hover:bg-zinc-100/90'>
         <img
           src={images?.[0] || 'https://via.placeholder.com/400x400?text=Nike'}
           alt={name}
-          className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'
+          className='w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-700 ease-out p-6'
         />
 
         {/* Badges */}
-        <div className='absolute top-3 left-3 flex flex-row flex-wrap gap-1.5'>
-          <span
-            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${tierColor}`}
-          >
-            {tier}
-          </span>
-          <span className='text-[10px] font-bold px-2 py-0.5 rounded-full bg-black text-white'>
-            {surfaceType}
-          </span>
+        <div className='absolute top-6 left-6 flex flex-col items-start gap-2'>
+          {discount > 0 && (
+            <span className='bg-red-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-sm'>
+              -{discount}%
+            </span>
+          )}
           {tags.includes('new') && (
-            <span className='text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500 text-white'>
-              NEW
+            <span className='bg-black text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-sm'>
+              Mới
             </span>
           )}
           {tags.includes('limited') && (
-            <span className='text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white'>
-              LIMITED
+            <span className='bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-sm'>
+              Giới hạn
             </span>
           )}
         </div>
 
-        {/* Discount */}
-        {discount > 0 && (
-          <div className='absolute top-3 right-3 bg-red-500 text-white text-xs font-bold w-10 h-10 rounded-full flex items-center justify-center'>
-            -{discount}%
-          </div>
-        )}
-
         {/* Out of stock */}
         {totalStock === 0 && (
-          <div className='absolute inset-0 bg-black/50 flex items-center justify-center'>
-            <span className='text-white font-bold text-sm tracking-widest uppercase'>
+          <div className='absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center'>
+            <span className='bg-black text-white px-6 py-2 rounded-full font-bold text-sm tracking-widest uppercase shadow-xl'>
               Hết hàng
             </span>
           </div>
@@ -93,26 +83,35 @@ export default function ProductCard({ product }) {
         {totalStock > 0 && (
           <button
             onClick={handleQuickAdd}
-            className='absolute bottom-0 inset-x-0 bg-black text-white text-sm font-bold py-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 hover:bg-zinc-800'
+            className='absolute bottom-5 right-5 bg-white text-black w-14 h-14 rounded-full flex items-center justify-center opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl hover:bg-black hover:text-white hover:scale-110'
           >
-            + Thêm vào giỏ
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
           </button>
         )}
       </div>
 
       {/* Info */}
-      <div className='p-4 flex flex-col flex-1'>
-        <h3 className='text-sm font-bold text-gray-900 line-clamp-2 mb-1'>
+      <div className='flex flex-col flex-1 px-2'>
+        <div className='flex items-center gap-2 mb-3'>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${tierColor} uppercase tracking-wider`}>
+            {tier}
+          </span>
+          <span className='text-[10px] font-bold text-zinc-500 uppercase tracking-widest'>
+            • {surfaceType}
+          </span>
+        </div>
+
+        <h3 className='text-lg font-black text-gray-900 line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors'>
           {name}
         </h3>
 
         {/* Stars */}
-        <div className='flex items-center gap-1 mb-2'>
-          <div className='flex'>
+        <div className='flex items-center gap-1.5 mb-4'>
+          <div className='flex gap-0.5'>
             {[1, 2, 3, 4, 5].map((s) => (
               <svg
                 key={s}
-                className={`w-3 h-3 ${s <= Math.round(rating) ? 'text-yellow-400' : 'text-zinc-200'}`}
+                className={`w-3.5 h-3.5 ${s <= Math.round(rating) ? 'text-yellow-400' : 'text-zinc-200'}`}
                 fill='currentColor'
                 viewBox='0 0 20 20'
               >
@@ -120,16 +119,16 @@ export default function ProductCard({ product }) {
               </svg>
             ))}
           </div>
-          <span className='text-xs text-zinc-400'>({numReviews})</span>
+          <span className='text-xs text-zinc-400 font-medium'>({numReviews})</span>
         </div>
 
         {/* Price */}
-        <div className='mt-auto flex items-center gap-2'>
-          <span className='text-base font-black text-black'>
+        <div className='mt-auto flex items-end gap-3'>
+          <span className='text-xl font-black text-black tracking-tight'>
             {price.toLocaleString('vi-VN')}đ
           </span>
           {originalPrice && (
-            <span className='text-xs text-zinc-400 line-through'>
+            <span className='text-sm text-zinc-400 line-through font-medium mb-0.5'>
               {originalPrice.toLocaleString('vi-VN')}đ
             </span>
           )}

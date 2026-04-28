@@ -12,6 +12,10 @@ import AboutPage from './pages/AboutPage';
 import OrderDetailPage from './pages/OrderDetailPage';
 import ProfilePage from './pages/ProfilePage';
 import OrdersPage from './pages/OrdersPage';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminOrdersPage from './pages/AdminOrdersPage';
+import AdminProductsPage from './pages/AdminProductsPage';
+import AdminCustomersPage from './pages/AdminCustomersPage';
 
 export default function App() {
   return (
@@ -29,6 +33,10 @@ export default function App() {
           <Route path='/profile' element={<ProfilePage />} />
           <Route path='/orders' element={<OrdersPage />} />
           <Route path='/orders/:id' element={<OrderDetailPage />} />
+          <Route path='/admin/dashboard' element={<AdminDashboard />} />
+          <Route path='/admin/orders' element={<AdminOrdersPage />} />
+          <Route path='/admin/products' element={<AdminProductsPage />} />
+          <Route path='/admin/customers' element={<AdminCustomersPage />} />
         </Routes>
       </main>
       <Footer />

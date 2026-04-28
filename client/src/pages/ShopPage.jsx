@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import FilterSidebar from '../components/FilterSidebar';
 import { getProductsAPI } from '../services/productService';
+import heroImg from '../assets/hero_main.jpg';
 
 const DEFAULT_FILTERS = {
   tier: [],
@@ -29,7 +30,26 @@ export default function ShopPage() {
     surfaceType: searchParams.get('surfaceType')
       ? [searchParams.get('surfaceType')]
       : [],
+    category: searchParams.get('category')
+      ? [searchParams.get('category')]
+      : [],
   });
+
+  // Sync filters whenever URL search params change (e.g., clicking Header menu while already on /shop)
+  useEffect(() => {
+    setFilters({
+      ...DEFAULT_FILTERS,
+      search: searchParams.get('search') || '',
+      tier: searchParams.get('tier') ? [searchParams.get('tier')] : [],
+      surfaceType: searchParams.get('surfaceType')
+        ? [searchParams.get('surfaceType')]
+        : [],
+      category: searchParams.get('category')
+        ? [searchParams.get('category')]
+        : [],
+    });
+    setPage(1);
+  }, [searchParams]);
 
   // ── Dùng ref để tránh fetchProducts tạo reference mới mỗi render ──
   const filtersRef = useRef(filters);
@@ -85,26 +105,32 @@ export default function ShopPage() {
   return (
     <div className='min-h-screen bg-zinc-50'>
       {/* ── Page Header ────────────────────────────────────── */}
-      <div className='bg-black text-white py-10 px-6'>
-        <div className='max-w-7xl mx-auto'>
-          <h1 className='text-3xl font-black uppercase tracking-widest mb-2'>
-            Cửa hàng
+      <div className='relative bg-zinc-950 text-white py-24 md:py-32 px-6 overflow-hidden'>
+        {/* Background Image */}
+        <div className='absolute inset-0 z-0'>
+          <img src={heroImg} alt='Shop Header' className='w-full h-full object-cover opacity-50' />
+          <div className='absolute inset-0 bg-gradient-to-t from-zinc-50 via-zinc-900/40 to-transparent'></div>
+        </div>
+
+        <div className='relative z-10 max-w-[1400px] mx-auto flex flex-col items-center text-center'>
+          <h1 className='text-5xl md:text-7xl font-black uppercase tracking-tighter mb-6 text-white drop-shadow-xl'>
+            Trang bị bóng đá
           </h1>
-          <p className='text-zinc-400 text-sm'>
-            {pagination.total ?? '...'} sản phẩm
+          <p className='text-zinc-200 text-lg md:text-xl font-medium max-w-2xl drop-shadow-md'>
+            Khám phá {pagination.total ?? '...'} sản phẩm đẳng cấp
             {filters.search && (
               <span>
                 {' '}
-                cho "<strong>{filters.search}</strong>"
+                cho từ khóa "<strong>{filters.search}</strong>"
               </span>
             )}
           </p>
         </div>
       </div>
 
-      <div className='max-w-7xl mx-auto px-4 py-8'>
-        {/* Search bar */}
-        <div className='mb-6 flex gap-3'>
+      <div className='max-w-[1400px] mx-auto px-6 pb-16 relative z-20 -mt-12 md:-mt-16'>
+        {/* Search & Mobile Filter Toggle */}
+        <div className='mb-8 flex gap-4 bg-white p-2 rounded-full shadow-lg border border-zinc-100'>
           <input
             type='text'
             placeholder='Tìm kiếm sản phẩm...'
@@ -112,17 +138,21 @@ export default function ShopPage() {
             onChange={(e) =>
               handleFilterChange({ ...filters, search: e.target.value })
             }
-            className='flex-1 border border-zinc-300 rounded-full px-5 py-2.5 text-sm outline-none focus:border-black transition'
+            className='flex-1 bg-transparent px-6 py-3 text-base outline-none'
           />
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className='lg:hidden flex items-center gap-2 border border-zinc-300 rounded-full px-4 py-2.5 text-sm font-bold hover:border-black transition'
+            className='lg:hidden flex items-center justify-center bg-black text-white rounded-full px-6 py-3 text-sm font-bold hover:bg-zinc-800 transition shadow-md'
           >
-            ☰ Lọc
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+            Bộ lọc
           </button>
+          <div className='hidden lg:flex items-center justify-center bg-black text-white rounded-full px-8 py-3 text-sm font-bold shadow-md cursor-pointer'>
+            Tìm kiếm
+          </div>
         </div>
 
-        <div className='flex gap-8'>
+        <div className='flex gap-10'>
           {/* Sidebar desktop */}
           <aside className='hidden lg:block w-64 shrink-0'>
             <FilterSidebar
