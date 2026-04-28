@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import ShopPage from './pages/ShopPage';
 import ProductDetail from './pages/ProductDetail';
 import AuthPage from './pages/AuthPage';
+import SSOCallback from './pages/SSOCallback';
 import CheckoutPage from './pages/CheckoutPage';
 import AboutPage from './pages/AboutPage';
 import OrderDetailPage from './pages/OrderDetailPage';
@@ -27,10 +28,11 @@ export default function App() {
           <Route path='/' element={<HomePage />} />
           <Route path='/shop' element={<ShopPage />} />
           <Route path='/product/:slug' element={<ProductDetail />} />
+          <Route path='/sso-callback' element={<SSOCallback />} />
           <Route path='/auth' element={<AuthPage />} />
           <Route path='/checkout' element={<CheckoutPage />} />
           <Route path='/about' element={<AboutPage />} />
-          <Route path='/profile' element={<ProfilePage />} />
+          <Route path='/account' element={<ProfilePage />} />
           <Route path='/orders' element={<OrdersPage />} />
           <Route path='/orders/:id' element={<OrderDetailPage />} />
           <Route path='/admin/dashboard' element={<AdminDashboard />} />

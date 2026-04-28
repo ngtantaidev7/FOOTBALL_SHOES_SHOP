@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import toast from 'react-hot-toast';
 import googleIcon from '../assets/google-icon-logo-svgrepo-com.svg';
+import { useUser, useClerk } from '@clerk/react';
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const { login, register, user, loading, error, clearError } = useAuthStore();
+  const { login, register, googleLogin, user, loading, error, clearError } = useAuthStore();
+  const { user: clerkUser, isSignedIn } = useUser();
+  const clerk = useClerk();
   const [isLogin, setIsLogin] = useState(true);
   const [form, setForm] = useState({
     name: '',
@@ -15,8 +18,9 @@ export default function AuthPage() {
     confirm: '',
   });
   const [errors, setErrors] = useState({});
+  const [googleLoading, setGoogleLoading] = useState(false);
 
-  // Nếu đã login → về home
+  // Nếu đã login backend → về home
   useEffect(() => {
     if (user) navigate('/');
   }, [user, navigate]);
@@ -26,6 +30,56 @@ export default function AuthPage() {
       clearError();
     }
   }, [error, clearError]);
+
+  // Sau khi Google redirect trở lại → sync với backend
+  useEffect(() => {
+    const pendingGoogle = sessionStorage.getItem('nike_google_pending');
+    if (pendingGoogle && isSignedIn && clerkUser && !user) {
+      const email = clerkUser.primaryEmailAddress?.emailAddress;
+      const name = clerkUser.fullName || clerkUser.firstName || '';
+      const avatar = clerkUser.imageUrl || '';
+
+      if (email) {
+        sessionStorage.removeItem('nike_google_pending');
+        setGoogleLoading(true);
+        googleLogin(email, name, avatar).then((result) => {
+          setGoogleLoading(false);
+          if (result.success) {
+            toast.success('Đăng nhập Google thành công!');
+            navigate('/');
+          }
+        });
+      }
+    }
+  }, [isSignedIn, clerkUser]);
+
+  const handleGoogleSignIn = async () => {
+    try {
+      // Đăng xuất phiên Clerk cũ để user có thể chọn tài khoản Google khác
+      if (isSignedIn) {
+        await clerk.signOut();
+      }
+      // Đánh dấu đang chờ Google
+      sessionStorage.setItem('nike_google_pending', 'true');
+
+      // Tạo phiên sign-in mới với Google OAuth
+      const si = await clerk.client.signIn.create({
+        strategy: 'oauth_google',
+        redirectUrl: window.location.origin + '/sso-callback',
+        actionCompleteRedirectUrl: window.location.origin + '/auth',
+      });
+
+      // Lấy URL redirect từ Google và chuyển hướng
+      const redirectUrl = si.firstFactorVerification.externalVerificationRedirectURL;
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
+      }
+    } catch (err) {
+      sessionStorage.removeItem('nike_google_pending');
+      console.error('Google sign-in error:', err);
+      toast.error('Không thể kết nối Google. Vui lòng thử lại.');
+    }
+  };
 
   const handleChange = (e) => {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -198,10 +252,12 @@ export default function AuthPage() {
             <div className='flex-1 h-px bg-zinc-200' />
           </div>
 
-          {/* Google Button */}
+          {/* Google Button - Clerk */}
           <button
             type='button'
-            className='w-full border-2 border-zinc-200 text-black font-bold py-3.5 rounded-full text-sm flex items-center justify-center gap-3 hover:bg-zinc-50 hover:border-zinc-300 transition'
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className='w-full border-2 border-zinc-200 text-black font-bold py-3.5 rounded-full text-sm flex items-center justify-center gap-3 hover:bg-zinc-50 hover:border-zinc-300 transition disabled:opacity-50'
           >
             <img src={googleIcon} alt="Google" className='w-5 h-5' />
             Tiếp tục với Google

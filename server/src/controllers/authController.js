@@ -1,5 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -60,6 +61,37 @@ export const login = asyncHandler(async (req, res) => {
     throw new Error(
       'Tài khoản đã bị vô hiệu hoá. Liên hệ admin để được hỗ trợ.',
     );
+  }
+
+  res.json({ success: true, data: sanitizeUser(user, signToken(user._id)) });
+});
+
+// @route  POST /api/auth/google-login  — Public
+export const googleLogin = asyncHandler(async (req, res) => {
+  const { email, name, avatar } = req.body;
+
+  if (!email) {
+    res.status(400);
+    throw new Error('Email là bắt buộc.');
+  }
+
+  // Tìm user theo email, nếu chưa có thì tạo mới
+  let user = await User.findOne({ email });
+
+  if (!user) {
+    // Tạo mật khẩu ngẫu nhiên cho user Google (họ không cần dùng)
+    const randomPassword = await bcrypt.hash(Math.random().toString(36).slice(-12), 10);
+    user = await User.create({
+      name: name || email.split('@')[0],
+      email,
+      password: randomPassword,
+      avatar: avatar || '',
+    });
+  }
+
+  if (!user.isActive) {
+    res.status(403);
+    throw new Error('Tài khoản đã bị vô hiệu hoá.');
   }
 
   res.json({ success: true, data: sanitizeUser(user, signToken(user._id)) });

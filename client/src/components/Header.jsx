@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import useCartStore from '../store/useCartStore';
 import useAuthStore from '../store/useAuthStore';
 import CartDrawer from './CartDrawer';
+import { motion } from 'framer-motion';
 
 export default function Header() {
   const navigate = useNavigate();
@@ -152,9 +153,14 @@ export default function Header() {
               <path d='M16 10a4 4 0 0 1-8 0' />
             </svg>
             {totalQty > 0 && (
-              <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold'>
+              <motion.span 
+                key={totalQty}
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className='absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-black shadow-lg border-2 border-black'
+              >
                 {totalQty > 99 ? '99+' : totalQty}
-              </span>
+              </motion.span>
             )}
           </button>
 
@@ -189,7 +195,7 @@ export default function Header() {
                     </Link>
                   )}
                   <Link
-                    to='/profile'
+                    to='/account'
                     className='flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-zinc-600 hover:bg-zinc-50 rounded-xl transition'
                   >
                     <div className='w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-500'>

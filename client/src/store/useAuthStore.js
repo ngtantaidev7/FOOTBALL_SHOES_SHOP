@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import {
   loginAPI,
   registerAPI,
+  googleLoginAPI,
   getMeAPI,
   updateMeAPI,
 } from '../services/authService';
@@ -35,6 +36,19 @@ const useAuthStore = create(
           return { success: true };
         } catch (err) {
           const message = err.response?.data?.message || 'Đăng nhập thất bại.';
+          set({ error: message, loading: false });
+          return { success: false, message };
+        }
+      },
+
+      googleLogin: async (email, name, avatar) => {
+        set({ loading: true, error: null });
+        try {
+          const { data } = await googleLoginAPI({ email, name, avatar });
+          set({ user: data.data, loading: false });
+          return { success: true };
+        } catch (err) {
+          const message = err.response?.data?.message || 'Đăng nhập Google thất bại.';
           set({ error: message, loading: false });
           return { success: false, message };
         }
