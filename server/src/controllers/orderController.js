@@ -2,6 +2,7 @@ import asyncHandler from 'express-async-handler';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
+import sendEmail from '../utils/sendEmail.js';
 
 // @route  POST /api/orders  — Private
 export const createOrder = asyncHandler(async (req, res) => {
@@ -75,6 +76,40 @@ export const createOrder = asyncHandler(async (req, res) => {
       { _id: item.product, 'sizes.size': item.size },
       { $inc: { 'sizes.$.stock': -item.quantity, totalStock: -item.quantity } },
     );
+  }
+
+  // ── Gửi email thông báo đơn hàng ──────────────────────────────
+  try {
+    const formatCurrency = (amount) => amount.toLocaleString('vi-VN') + 'đ';
+    const itemsHtml = validatedItems.map(
+      (item) =>
+        `<li>${item.name} - Size: ${item.size} - Số lượng: ${item.quantity} - Giá: ${formatCurrency(item.price)}</li>`
+    ).join('');
+
+    const html = `
+      <h2>Cảm ơn bạn đã đặt hàng tại Nike Football Shop!</h2>
+      <p>Xin chào <strong>${req.user.name}</strong>,</p>
+      <p>Đơn hàng <strong>#${order._id}</strong> của bạn đã được tiếp nhận thành công.</p>
+      <h3>Chi tiết đơn hàng:</h3>
+      <ul>${itemsHtml}</ul>
+      <p><strong>Phí giao hàng:</strong> ${formatCurrency(shippingPrice)}</p>
+      <p><strong>Tổng cộng:</strong> <span style="color:red; font-weight:bold;">${formatCurrency(totalPrice)}</span></p>
+      <h3>Thông tin giao hàng:</h3>
+      <p>Họ tên người nhận: ${shippingInfo.fullName}</p>
+      <p>Số điện thoại: ${shippingInfo.phone}</p>
+      <p>Địa chỉ: ${shippingInfo.street}, ${shippingInfo.ward}, ${shippingInfo.district}, ${shippingInfo.city}</p>
+      <p>Phương thức thanh toán: ${paymentMethod === 'cod' ? 'Thanh toán khi nhận hàng (COD)' : 'Chuyển khoản / Online'}</p>
+      <br />
+      <p>Chúng tôi sẽ đóng gói và giao hàng trong thời gian sớm nhất. Chúc bạn một ngày tốt lành!</p>
+    `;
+
+    await sendEmail({
+      email: req.user.email,
+      subject: `Xác nhận đơn hàng #${order._id} - Nike Football Shop`,
+      html,
+    });
+  } catch (error) {
+    console.error('Lỗi khi gửi email:', error);
   }
 
   res.status(201).json({ success: true, data: order });
