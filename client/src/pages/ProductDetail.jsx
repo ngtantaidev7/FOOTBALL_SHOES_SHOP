@@ -291,33 +291,73 @@ export default function ProductDetail() {
 
         {/* Description */}
         {tab === 'desc' && (
-          <div className='py-8 max-w-4xl'>
-            <div className='bg-white rounded-3xl p-8 border border-zinc-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-10'>
-              <h3 className='text-xl font-black mb-4 flex items-center gap-2'>
-                <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                Chi tiết sản phẩm
-              </h3>
-              <p className='text-zinc-600 leading-relaxed text-lg'>
-                {product.description}
-              </p>
-            </div>
+          <div className='py-12'>
+            <div className='grid grid-cols-1 lg:grid-cols-12 gap-16'>
+               {/* Left: Text Content */}
+               <div className='lg:col-span-7 space-y-12'>
+                  <div className='relative'>
+                     <h3 className='text-3xl font-black uppercase tracking-tighter mb-8 flex items-center gap-4'>
+                        <span className='w-12 h-1 bg-black'></span>
+                        Thông tin sản phẩm
+                     </h3>
+                     <div className='prose prose-zinc max-w-none'>
+                        <p className='text-zinc-600 leading-relaxed text-xl font-medium'>
+                           {product.description}
+                        </p>
+                        <p className='text-zinc-500 mt-6 leading-relaxed'>
+                           Được thiết kế để tối ưu hóa tốc độ và khả năng kiểm soát bóng, phiên bản này mang lại cảm giác bóng chân thực nhất. Cấu trúc Flyknit ôm sát kết hợp cùng công nghệ All Conditions Control (ACC) giúp bạn duy trì phong độ đỉnh cao trong mọi điều kiện thời tiết.
+                        </p>
+                     </div>
+                  </div>
 
-            <h3 className='text-sm font-black mb-6 uppercase tracking-widest text-zinc-400'>Thông số kỹ thuật</h3>
-            <div className='grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6'>
-              {[
-                { label: 'Phân khúc', value: product.tier, icon: <svg className="w-8 h-8 text-yellow-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg> },
-                { label: 'Loại sân', value: product.surfaceType, icon: <svg className="w-8 h-8 text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg> },
-                { label: 'Dòng giày', value: product.category, icon: <svg className="w-8 h-8 text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> },
-                { label: 'Màu sắc', value: product.color || 'Đa sắc', icon: <svg className="w-8 h-8 text-purple-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg> },
-              ].map((r) => (
-                <div key={r.label} className='bg-white rounded-3xl p-6 border border-zinc-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col items-center text-center'>
-                  {r.icon}
-                  <p className='text-xs text-zinc-400 uppercase tracking-widest mb-1 font-bold'>
-                    {r.label}
-                  </p>
-                  <p className='font-black text-lg text-black'>{r.value}</p>
-                </div>
-              ))}
+                  <div className='bg-zinc-50 rounded-[2.5rem] p-10 border border-zinc-100'>
+                     <h4 className='text-xs font-black uppercase tracking-[0.3em] text-zinc-400 mb-6'>Đặc điểm nổi bật</h4>
+                     <ul className='space-y-4'>
+                        {[
+                           'Cấu trúc da tổng hợp cao cấp mềm mại, tăng độ bám bóng.',
+                           'Lớp đệm Air Zoom thế hệ mới hỗ trợ bứt tốc tức thì.',
+                           'Cổ thun Dynamic Fit ôm sát cổ chân, tạo sự linh hoạt.',
+                           'Hệ thống đinh chuyên dụng cho độ bám đa hướng.'
+                        ].map((item, i) => (
+                           <li key={i} className='flex items-start gap-4 text-zinc-700 font-bold text-sm'>
+                              <span className='w-1.5 h-1.5 bg-black rounded-full mt-2 shrink-0'></span>
+                              {item}
+                           </li>
+                        ))}
+                     </ul>
+                  </div>
+               </div>
+
+               {/* Right: Technical Specs Table */}
+               <div className='lg:col-span-5'>
+                  <div className='bg-white rounded-[3rem] p-10 shadow-2xl border border-zinc-50 sticky top-32'>
+                     <h3 className='text-xs font-black uppercase tracking-[0.3em] text-zinc-400 mb-10'>Thông số kỹ thuật</h3>
+                     <div className='space-y-8'>
+                        {[
+                           { label: 'Phân khúc', value: product.tier, sub: 'Cấp độ chuyên nghiệp' },
+                           { label: 'Loại sân', value: product.surfaceType, sub: 'Cỏ tự nhiên / Nhân tạo' },
+                           { label: 'Dòng giày', value: product.category, sub: 'Tối ưu tốc độ' },
+                           { label: 'Màu sắc', value: product.color || 'Đa sắc', sub: 'Colorway chính thức' },
+                           { label: 'Trọng lượng', value: '185g', sub: 'Siêu nhẹ' }
+                        ].map((spec, i) => (
+                           <div key={i} className='flex items-center justify-between group cursor-default'>
+                              <div>
+                                 <p className='text-[10px] font-black uppercase text-zinc-300 tracking-widest group-hover:text-black transition-colors'>{spec.label}</p>
+                                 <p className='text-lg font-black text-black mt-0.5 tracking-tight'>{spec.value}</p>
+                              </div>
+                              <div className='text-right'>
+                                 <p className='text-[9px] font-bold text-zinc-400 italic'>{spec.sub}</p>
+                              </div>
+                           </div>
+                        ))}
+                     </div>
+
+                     <div className='mt-12 pt-8 border-t border-zinc-100 flex items-center gap-4 text-zinc-400'>
+                        <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'/></svg>
+                        <span className='text-[10px] font-black uppercase tracking-widest'>Kiểm định bởi Nike Football</span>
+                     </div>
+                  </div>
+               </div>
             </div>
           </div>
         )}

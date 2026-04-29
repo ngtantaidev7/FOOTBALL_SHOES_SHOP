@@ -471,20 +471,57 @@ export default function CheckoutPage() {
             <div className='bg-white rounded-[2.5rem] p-8 shadow-sm border border-zinc-100 sticky top-32'>
               <h2 className='text-lg font-black uppercase tracking-tighter mb-8'>Tóm tắt đơn hàng</h2>
 
-              <div className='space-y-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar mb-8'>
+              <div className='space-y-6 max-h-[460px] overflow-y-auto pr-2 custom-scrollbar mb-8'>
                 {items.map((item, i) => (
-                  <div key={i} className='flex gap-4 group'>
-                    <div className='relative w-20 h-20 bg-zinc-50 rounded-2xl overflow-hidden shrink-0'>
-                      <img src={item.images?.[0]} alt={item.name} className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500' />
-                      <div className='absolute top-1 right-1 bg-black text-white text-[8px] font-black px-1.5 py-0.5 rounded-full'>x{item.quantity}</div>
+                  <div key={i} className='flex gap-4 group bg-zinc-50/50 p-3 rounded-3xl border border-transparent hover:border-zinc-200 transition-all'>
+                    <div className='relative w-24 h-24 bg-white rounded-2xl overflow-hidden shrink-0 shadow-sm'>
+                      <img src={item.images?.[0]} alt={item.name} className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-700' />
                     </div>
-                    <div className='flex-1 py-1'>
-                      <p className='text-xs font-black uppercase leading-tight line-clamp-2'>{item.name}</p>
-                      <p className='text-[10px] text-zinc-400 font-bold uppercase mt-1'>Size EU {item.selectedSize}</p>
-                      <p className='text-xs font-black mt-2'>{(item.price * item.quantity).toLocaleString('vi-VN')}đ</p>
+                    <div className='flex-1 flex flex-col justify-between py-1'>
+                      <div>
+                        <div className='flex justify-between items-start gap-2'>
+                          <p className='text-xs font-black uppercase leading-tight line-clamp-2'>{item.name}</p>
+                          <button 
+                            onClick={() => removeItem(item._id, item.selectedSize)}
+                            className='text-zinc-300 hover:text-red-500 transition-colors p-1'
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                          </button>
+                        </div>
+                        <p className='text-[10px] text-zinc-400 font-bold uppercase mt-1'>Size EU {item.selectedSize}</p>
+                      </div>
+                      
+                      <div className='flex items-center justify-between mt-3'>
+                        {/* Quantity Controls */}
+                        <div className='flex items-center bg-white rounded-full border border-zinc-200 p-1'>
+                          <button 
+                            onClick={() => updateQty(item._id, item.selectedSize, item.quantity - 1)}
+                            className='w-6 h-6 flex items-center justify-center rounded-full hover:bg-zinc-100 transition-colors'
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M20 12H4" /></svg>
+                          </button>
+                          <span className='text-[11px] font-black w-8 text-center'>{item.quantity}</span>
+                          <button 
+                            onClick={() => updateQty(item._id, item.selectedSize, item.quantity + 1)}
+                            className='w-6 h-6 flex items-center justify-center rounded-full hover:bg-zinc-100 transition-colors'
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4" /></svg>
+                          </button>
+                        </div>
+                        <p className='text-xs font-black'>{(item.price * item.quantity).toLocaleString('vi-VN')}đ</p>
+                      </div>
                     </div>
                   </div>
                 ))}
+                
+                {/* Add more products link */}
+                <Link 
+                  to="/shop" 
+                  className='flex items-center justify-center gap-2 py-4 border-2 border-dashed border-zinc-200 rounded-3xl text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:border-black hover:text-black transition-all group'
+                >
+                  <svg className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4" /></svg>
+                  Thêm sản phẩm khác
+                </Link>
               </div>
 
               <div className='space-y-4 pt-6 border-t border-zinc-100'>

@@ -7,8 +7,9 @@ import {
   updateMe,
   changePassword,
   toggleWishlist,
+  getAllUsers,
 } from '../controllers/authController.js';
-import { protect } from '../middleware/auth.js';
+import { protect, authorize } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -22,5 +23,8 @@ router.get('/me', protect, getMe);
 router.put('/me', protect, updateMe);
 router.put('/change-password', protect, changePassword);
 router.post('/wishlist/:productId', protect, toggleWishlist);
+
+// Admin
+router.get('/admin/users', protect, authorize('admin'), getAllUsers);
 
 export default router;

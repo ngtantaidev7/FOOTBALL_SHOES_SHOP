@@ -9,3 +9,5 @@ export const getAllOrdersAPI = (params = {}) => api.get('/orders', { params });
 export const updateOrderStatusAPI = (id, payload) =>
   api.put(`/orders/${id}/status`, payload);
 export const getAdminStatsAPI = () => api.get('/orders/stats');
+export const getCustomerInsightsAPI = () => api.get('/orders/admin/insights');
+export const getDetailedReportsAPI = () => api.get('/orders/admin/reports/detailed');

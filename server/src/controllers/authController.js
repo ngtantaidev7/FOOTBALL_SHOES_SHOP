@@ -108,10 +108,10 @@ export const getMe = asyncHandler(async (req, res) => {
 
 // @route  PUT /api/auth/me  — Private
 export const updateMe = asyncHandler(async (req, res) => {
-  const { name, avatar } = req.body;
+  const { name, avatar, addresses } = req.body;
   const user = await User.findByIdAndUpdate(
     req.user._id,
-    { name, avatar },
+    { name, avatar, addresses },
     { new: true, runValidators: true },
   );
   res.json({ success: true, data: user });
@@ -164,4 +164,10 @@ export const toggleWishlist = asyncHandler(async (req, res) => {
 
   await user.save();
   res.json({ success: true, wishlisted, wishlist: user.wishlist });
+});
+
+// @route  GET /api/auth/admin/users  — Admin
+export const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({}).sort('-createdAt');
+  res.json({ success: true, data: users });
 });

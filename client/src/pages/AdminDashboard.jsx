@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import useAuthStore from '../store/useAuthStore';
 import { useNavigate, Link } from 'react-router-dom';
-import { getAdminStatsAPI } from '../services/orderService';
+import { getAdminStatsAPI, getDetailedReportsAPI } from '../services/orderService';
 import toast from 'react-hot-toast';
 import AdminSidebar from '../components/AdminSidebar';
 
@@ -20,8 +20,25 @@ export default function AdminDashboard() {
 
     const fetchStats = async () => {
       try {
-        const { data } = await getAdminStatsAPI();
-        setStats(data.data);
+        const [statsRes, reportsRes] = await Promise.all([
+           getAdminStatsAPI(),
+           getDetailedReportsAPI()
+        ]);
+        // Fill missing days with 0
+        const filledData = [];
+        const now = new Date();
+        for (let i = 29; i >= 0; i--) {
+          const d = new Date(now);
+          d.setDate(d.getDate() - i);
+          const dateStr = d.toISOString().split('T')[0];
+          const existing = reportsRes.data.data.salesByDay.find(item => item._id === dateStr);
+          filledData.push(existing || { _id: dateStr, revenue: 0, count: 0 });
+        }
+
+        setStats({
+          ...statsRes.data.data,
+          chartData: filledData
+        });
       } catch (err) {
         toast.error('Không thể tải dữ liệu thống kê');
         console.error(err);
@@ -101,21 +118,23 @@ export default function AdminDashboard() {
 
         <div className='grid grid-cols-1 xl:grid-cols-3 gap-8'>
           {/* Active Orders Table */}
-          <div className='xl:col-span-2 bg-white rounded-2xl shadow-sm border border-zinc-100 p-8'>
+          <div className='xl:col-span-2 bg-white rounded-3xl shadow-sm border border-zinc-100 p-8 overflow-hidden'>
             <div className='flex items-center justify-between mb-8'>
-              <h3 className='text-sm font-black uppercase tracking-widest text-zinc-500'>Đơn hàng gần đây</h3>
-              <button className='text-xs font-bold text-blue-600 hover:underline'>Xem tất cả</button>
+              <div>
+                 <h3 className='text-sm font-black uppercase tracking-widest text-zinc-500'>Đơn hàng gần đây</h3>
+                 <p className='text-[10px] text-zinc-400 font-bold mt-1 uppercase'>Kiểm tra và xử lý các đơn hàng mới nhất</p>
+              </div>
+              <button onClick={() => navigate('/admin/orders')} className='text-[10px] font-black uppercase tracking-widest bg-zinc-50 px-4 py-2 rounded-full hover:bg-black hover:text-white transition-all'>Tất cả</button>
             </div>
             <div className='overflow-x-auto'>
               <table className='w-full text-left text-xs'>
                 <thead>
-                  <tr className='text-zinc-400 uppercase tracking-widest border-b border-zinc-50'>
-                    <th className='pb-4 font-black'>ID</th>
-                    <th className='pb-4 font-black'>Tên sản phẩm</th>
-                    <th className='pb-4 font-black text-center'>Số lượng</th>
+                  <tr className='text-zinc-300 uppercase tracking-widest border-b border-zinc-50'>
+                    <th className='pb-4 font-black'>Mã đơn</th>
+                    <th className='pb-4 font-black'>Sản phẩm tiêu biểu</th>
                     <th className='pb-4 font-black'>Khách hàng</th>
                     <th className='pb-4 font-black'>Ngày đặt</th>
-                    <th className='pb-4 font-black text-right'>Tổng</th>
+                    <th className='pb-4 font-black text-right'>Giá trị</th>
                   </tr>
                 </thead>
                 <tbody className='divide-y divide-zinc-50'>
@@ -125,12 +144,11 @@ export default function AdminDashboard() {
                       onClick={() => setSelectedOrder(order)}
                       className='hover:bg-zinc-50 transition cursor-pointer group'
                     >
-                      <td className='py-4 font-bold text-blue-600 group-hover:underline'>#{order.id.slice(-6).toUpperCase()}</td>
-                      <td className='py-4 font-medium text-zinc-700 max-w-[150px] truncate'>{order.items[0]?.name} {order.items.length > 1 ? `+${order.items.length - 1}` : ''}</td>
-                      <td className='py-4 text-center font-bold text-zinc-500'>{order.items.reduce((acc, i) => acc + i.quantity, 0)}</td>
-                      <td className='py-4 text-zinc-600'>{order.customer}</td>
-                      <td className='py-4 text-zinc-400'>{new Date(order.date).toLocaleDateString('vi-VN')}</td>
-                      <td className='py-4 text-right font-black text-zinc-800'>{order.total.toLocaleString('vi-VN')}đ</td>
+                      <td className='py-5 font-bold text-blue-600'>#{order.id.slice(-6).toUpperCase()}</td>
+                      <td className='py-5 font-bold text-zinc-800 max-w-[200px] truncate uppercase text-[10px]'>{order.items[0]?.name} {order.items.length > 1 ? `(+${order.items.length - 1})` : ''}</td>
+                      <td className='py-5 text-zinc-500 font-bold uppercase text-[10px]'>{order.customer}</td>
+                      <td className='py-5 text-zinc-400 text-[10px]'>{new Date(order.date).toLocaleDateString('vi-VN')}</td>
+                      <td className='py-5 text-right font-black text-zinc-800'>{order.total.toLocaleString('vi-VN')}đ</td>
                     </tr>
                   ))}
                 </tbody>
@@ -138,99 +156,152 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Analytics Column */}
-          <div className='bg-white rounded-2xl shadow-sm border border-zinc-100 p-8'>
-            <h3 className='text-sm font-black uppercase tracking-widest text-zinc-500 mb-8'>Phân tích doanh thu</h3>
-            <div className='space-y-6'>
-               <div className='h-64 flex items-end justify-between gap-3 px-2'>
-                  {[40, 70, 30, 45, 85, 60, 75].map((h, i) => (
-                    <div key={i} className='flex-1 flex flex-col justify-end h-full'>
-                       <div 
-                         className='w-full bg-blue-600 rounded-t-xl hover:bg-blue-500 transition-all cursor-pointer relative group'
-                         style={{ height: `${h}%` }}
-                       >
-                          <div className='absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] font-black px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none shadow-xl'>
-                             {h}%
-                          </div>
-                       </div>
-                       <span className='text-[10px] font-black text-zinc-400 text-center mt-3 uppercase tracking-tighter'>Tháng {i+1}</span>
-                    </div>
-                  ))}
+          {/* Top Products / Customers Summary */}
+          <div className='space-y-8'>
+            {/* Quick Analytics Card */}
+            <div className='bg-white rounded-3xl shadow-sm border border-zinc-100 p-8'>
+                <h3 className='text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-6'>Biểu đồ doanh thu (30 ngày)</h3>
+                <div className='h-48 flex items-end justify-between gap-1 px-2'>
+                  {(!stats.chartData || stats.chartData.length === 0) ? (
+                    <div className='w-full h-full flex items-center justify-center text-[10px] font-bold text-zinc-300 uppercase'>Chưa có dữ liệu</div>
+                  ) : (
+                    stats.chartData.map((day, i) => {
+                      const maxRevenue = Math.max(...stats.chartData.map(d => d.revenue), 1);
+                      return (
+                        <div key={i} className='flex-1 flex flex-col justify-end h-full group relative'>
+                           <div 
+                             className='w-full bg-blue-100 group-hover:bg-blue-600 transition-all cursor-pointer rounded-t-sm'
+                             style={{ height: `${Math.max((day.revenue / maxRevenue) * 100, 5)}%` }}
+                           >
+                              <div className='absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap z-10'>
+                                 {day.revenue.toLocaleString('vi-VN')}đ
+                              </div>
+                           </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+                <div className='mt-6 pt-6 border-t border-zinc-50 flex items-center justify-between'>
+                   <span className='text-[10px] font-black uppercase text-zinc-400'>Tỷ lệ tăng trưởng</span>
+                   <span className='text-xs font-black text-green-500'>+12.5%</span>
+                </div>
+            </div>
+
+            {/* Quick Reports Link */}
+            <div className='bg-black text-white p-8 rounded-[35px] relative overflow-hidden group cursor-pointer' onClick={() => navigate('/admin/reports')}>
+               <div className='relative z-10'>
+                  <h3 className='text-[10px] font-black uppercase tracking-widest opacity-40 mb-2'>Báo cáo chi tiết</h3>
+                  <p className='text-sm leading-relaxed font-bold'>Xem phân tích chuyên sâu về doanh thu và hiệu quả sản phẩm.</p>
+                  <div className='mt-6 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest'>
+                     Khám phá ngay 
+                     <svg className='w-4 h-4 group-hover:translate-x-1 transition-transform' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M17 8l4 4m0 0l-4 4m4-4H3'/></svg>
+                  </div>
                </div>
-               <div className='pt-6 border-t border-zinc-50'>
-                  <div className='flex items-center justify-between mb-4'>
-                    <span className='text-xs font-bold text-zinc-500'>Đạt chỉ tiêu tháng</span>
-                    <span className='text-xs font-black text-blue-600'>85%</span>
-                  </div>
-                  <div className='w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden'>
-                    <div className='h-full bg-blue-600 rounded-full' style={{ width: '85%' }} />
-                  </div>
+               <div className='absolute -right-10 -bottom-10 opacity-10 group-hover:scale-110 transition-transform'>
+                  <svg className='w-40 h-40' fill='currentColor' viewBox='0 0 24 24'><path d='M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'/></svg>
                </div>
             </div>
           </div>
         </div>
       </main>
 
-      {/* Order Detail Modal */}
       {selectedOrder && (
-        <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm'>
-          <div className='bg-white w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200'>
-            <div className='p-8 border-b border-zinc-100 flex items-center justify-between bg-zinc-50'>
+        <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md'>
+          <div className='bg-white w-full max-w-2xl rounded-[40px] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300'>
+            {/* Modal Header */}
+            <div className='p-8 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50'>
               <div>
-                <h2 className='text-2xl font-black uppercase tracking-tighter'>Chi tiết đơn hàng #{selectedOrder.id.slice(-6).toUpperCase()}</h2>
-                <p className='text-zinc-400 text-xs font-bold uppercase tracking-widest mt-1'>Ngày đặt: {new Date(selectedOrder.date).toLocaleString('vi-VN')}</p>
+                <h2 className='text-2xl font-black uppercase tracking-tighter'>Đơn hàng #{selectedOrder.id.slice(-6).toUpperCase()}</h2>
+                <p className='text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1'>
+                  {new Date(selectedOrder.date).toLocaleDateString('vi-VN')} | {new Date(selectedOrder.date).toLocaleTimeString('vi-VN')}
+                </p>
               </div>
               <button 
                 onClick={() => setSelectedOrder(null)}
-                className='w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-zinc-50 transition'
+                className='w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-zinc-50 transition-all hover:rotate-90 active:scale-95 border border-zinc-100'
               >
-                <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M6 18L18 6M6 6l12 12'/></svg>
+                <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M6 18L18 6M6 6l12 12'/></svg>
               </button>
             </div>
 
-            <div className='p-8 grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[60vh] overflow-y-auto'>
+            <div className='p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar'>
                {/* Items List */}
                <div className='space-y-4'>
-                  <h3 className='text-xs font-black uppercase tracking-widest text-zinc-400 mb-4'>Sản phẩm</h3>
+                  <div className='flex items-center gap-3 mb-6'>
+                    <div className='w-1 h-4 bg-black rounded-full' />
+                    <h3 className='text-xs font-black uppercase tracking-widest text-black'>Danh sách sản phẩm</h3>
+                  </div>
                   {selectedOrder.items.map((item, i) => (
-                    <div key={i} className='flex items-center gap-4 bg-zinc-50 p-3 rounded-2xl'>
-                       <div className='flex-1'>
-                          <p className='text-sm font-black leading-tight'>{item.name}</p>
-                          <p className='text-[10px] text-zinc-500 mt-1 font-bold'>SL: {item.quantity} × {item.price.toLocaleString('vi-VN')}đ</p>
+                    <div key={i} className='flex items-center gap-6 bg-zinc-50/80 p-4 rounded-3xl border border-zinc-100 group hover:border-black transition-all'>
+                       <div className='w-20 h-20 bg-white rounded-2xl overflow-hidden shrink-0 shadow-sm p-2'>
+                          <img src={item.image} alt={item.name} className='w-full h-full object-contain group-hover:scale-110 transition-all duration-700' />
                        </div>
-                       <div className='text-sm font-black'>{(item.quantity * item.price).toLocaleString('vi-VN')}đ</div>
+                       <div className='flex-1'>
+                          <p className='text-sm font-black leading-tight uppercase'>{item.name}</p>
+                          <div className='flex items-center gap-4 mt-2'>
+                             <span className='text-[10px] font-bold text-zinc-400 uppercase'>Số lượng: {item.quantity}</span>
+                             <span className='text-[10px] font-bold text-zinc-400 uppercase'>Giá: {item.price.toLocaleString('vi-VN')}đ</span>
+                          </div>
+                       </div>
+                       <div className='text-sm font-black tracking-tighter'>{(item.quantity * item.price).toLocaleString('vi-VN')}đ</div>
                     </div>
                   ))}
                </div>
 
-               {/* Shipping & Payment */}
-               <div className='space-y-6'>
-                  <div>
-                    <h3 className='text-xs font-black uppercase tracking-widest text-zinc-400 mb-2'>Khách hàng</h3>
-                    <p className='text-sm font-bold'>{selectedOrder.shippingInfo.fullName}</p>
-                    <p className='text-xs text-zinc-500'>{selectedOrder.shippingInfo.phone} · {selectedOrder.shippingInfo.email}</p>
-                    <p className='text-xs text-zinc-500 mt-1'>{selectedOrder.shippingInfo.street}, {selectedOrder.shippingInfo.ward}, {selectedOrder.shippingInfo.district}, {selectedOrder.shippingInfo.city}</p>
-                  </div>
-                  <div className='grid grid-cols-2 gap-4'>
-                    <div>
-                      <h3 className='text-xs font-black uppercase tracking-widest text-zinc-400 mb-2'>Thanh toán</h3>
-                      <span className='px-2 py-1 bg-zinc-100 text-zinc-600 rounded text-[10px] font-black uppercase'>{selectedOrder.paymentMethod}</span>
+               <div className='grid grid-cols-1 md:grid-cols-2 gap-8 pt-4'>
+                  {/* Shipping Info */}
+                  <div className='bg-zinc-50/50 p-6 rounded-3xl border border-zinc-100'>
+                    <h3 className='text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-4'>Thông tin khách hàng</h3>
+                    <div className='space-y-1'>
+                      <p className='text-sm font-black uppercase'>{selectedOrder.shippingInfo?.fullName || selectedOrder.customer}</p>
+                      <p className='text-xs font-bold text-zinc-500'>{selectedOrder.shippingInfo?.phone}</p>
+                      <p className='text-xs text-zinc-400 mt-2 leading-relaxed'>
+                        {selectedOrder.shippingInfo?.street}, {selectedOrder.shippingInfo?.ward}, <br/>
+                        {selectedOrder.shippingInfo?.district}, {selectedOrder.shippingInfo?.city}
+                      </p>
                     </div>
-                    <div>
-                      <h3 className='text-xs font-black uppercase tracking-widest text-zinc-400 mb-2'>Trạng thái</h3>
-                      <span className={`px-2 py-1 rounded text-[10px] font-black uppercase ${
-                        selectedOrder.status === 'delivered' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
-                      }`}>
-                        {selectedOrder.status}
-                      </span>
+                  </div>
+
+                  {/* Payment & Status */}
+                  <div className='bg-zinc-50/50 p-6 rounded-3xl border border-zinc-100'>
+                    <h3 className='text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-4'>Thanh toán & Trạng thái</h3>
+                    <div className='space-y-4'>
+                      <div className='flex items-center justify-between'>
+                        <span className='text-[10px] font-bold text-zinc-500 uppercase'>Phương thức:</span>
+                        <span className='text-[10px] font-black uppercase bg-white px-3 py-1 rounded-full shadow-sm'>{selectedOrder.paymentMethod || 'COD'}</span>
+                      </div>
+                      <div className='flex items-center justify-between'>
+                        <span className='text-[10px] font-bold text-zinc-500 uppercase'>Trạng thái:</span>
+                        <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-sm ${
+                          selectedOrder.status === 'delivered' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
+                        }`}>
+                          {selectedOrder.status}
+                        </span>
+                      </div>
                     </div>
                   </div>
                </div>
             </div>
 
-            <div className='p-8 bg-zinc-50 border-t border-zinc-100 flex items-center justify-between'>
-               <div className='text-zinc-400 text-xs font-bold uppercase tracking-widest'>Tổng thanh toán</div>
-               <div className='text-3xl font-black'>{selectedOrder.total.toLocaleString('vi-VN')}đ</div>
+            {/* Modal Footer */}
+            <div className='p-8 bg-black text-white flex items-center justify-between relative overflow-hidden'>
+               {/* Background Swoosh */}
+               <div className='absolute right-0 top-0 opacity-10 -mr-10 -mt-10'>
+                  <svg className='w-40 h-40 fill-white' viewBox='0 0 192.756 192.756'><path d='M42.741 71.477c-9.881 11.604-19.355 25.994-19.45 36.75-.037 4.047 1.255 7.58 4.354 10.256 4.46 3.854 9.374 5.213 14.264 5.221 7.146.01 14.242-2.873 19.798-5.096 9.357-3.742 112.79-48.659 112.79-48.659.998-.5.811-1.123-.438-.812-.504.126-112.603 30.505-112.603 30.505a24.771 24.771 0 0 1-6.524.934c-8.615.051-16.281-4.731-16.219-14.808.024-3.943 1.231-8.698 4.028-14.291z' /></svg>
+               </div>
+               
+               <div className='relative z-10'>
+                  <p className='text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1'>Tổng thanh toán</p>
+                  <p className='text-4xl font-black tracking-tighter'>{selectedOrder.total.toLocaleString('vi-VN')}đ</p>
+               </div>
+
+               <button 
+                onClick={() => setSelectedOrder(null)}
+                className='relative z-10 bg-white text-black font-black px-8 py-3 rounded-full text-[10px] uppercase tracking-widest hover:bg-zinc-100 transition-all active:scale-95'
+               >
+                 Đóng
+               </button>
             </div>
           </div>
         </div>

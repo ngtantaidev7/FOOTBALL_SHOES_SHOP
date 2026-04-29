@@ -260,7 +260,8 @@ export const getOrderStats = asyncHandler(async (req, res) => {
         items: o.items.map(item => ({
           name: item.name,
           quantity: item.quantity,
-          price: item.price
+          price: item.price,
+          image: item.image
         })),
         shippingInfo: o.shippingInfo,
         paymentMethod: o.paymentMethod,
@@ -268,4 +269,119 @@ export const getOrderStats = asyncHandler(async (req, res) => {
       })),
     },
   });
+});
+
+// @route  GET /api/orders/insights  — Private/Admin
+export const getCustomerInsights = asyncHandler(async (req, res) => {
+  const insights = await Order.aggregate([
+    {
+      $group: {
+        _id: '$user',
+        orderCount: { $sum: 1 },
+        totalSpent: { $sum: '$totalPrice' },
+        lastOrder: { $max: '$createdAt' },
+      },
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'userInfo',
+      },
+    },
+    { $unwind: '$userInfo' },
+    {
+      $project: {
+        _id: 1,
+        orderCount: 1,
+        totalSpent: 1,
+        lastOrder: 1,
+        name: '$userInfo.name',
+        email: '$userInfo.email',
+        avatar: '$userInfo.avatar',
+        role: '$userInfo.role',
+      },
+    },
+    { $sort: { totalSpent: -1 } },
+  ]);
+  res.json({ success: true, data: insights });
+});
+
+// @route  GET /api/orders/reports/detailed  — Private/Admin
+export const getDetailedReports = asyncHandler(async (req, res) => {
+  // Top products
+  const topProducts = await Order.aggregate([
+    { $unwind: '$items' },
+    {
+      $group: {
+        _id: '$items.product',
+        name: { $first: '$items.name' },
+        image: { $first: '$items.image' },
+        totalQty: { $sum: '$items.quantity' },
+        totalRevenue: {
+          $sum: { $multiply: ['$items.price', '$items.quantity'] },
+        },
+      },
+    },
+    { $sort: { totalQty: -1 } },
+    { $limit: 10 },
+  ]);
+
+  // Sales by day for the last 30 days
+  const last30Days = new Date();
+  last30Days.setDate(last30Days.getDate() - 30);
+
+  const salesByDay = await Order.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: last30Days },
+        orderStatus: { $ne: 'cancelled' },
+      },
+    },
+    {
+      $group: {
+        _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+        revenue: { $sum: '$totalPrice' },
+        count: { $sum: 1 },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ]);
+
+  res.json({ success: true, data: { topProducts, salesByDay } });
+});
+// @route  PUT /api/orders/:id/cancel  — Private
+export const cancelOrder = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id);
+
+  if (!order) {
+    res.status(404);
+    throw new Error('Không tìm thấy đơn hàng.');
+  }
+
+  if (order.user.toString() !== req.user._id.toString()) {
+    res.status(403);
+    throw new Error('Bạn không có quyền hủy đơn hàng này.');
+  }
+
+  if (order.orderStatus !== 'pending') {
+    res.status(400);
+    throw new Error('Chỉ có thể hủy đơn hàng khi đang ở trạng thái "Chờ xác nhận".');
+  }
+
+  // Hoàn stock
+  for (const item of order.items) {
+    await Product.updateOne(
+      { _id: item.product, 'sizes.size': item.size },
+      {
+        $inc: { 'sizes.$.stock': item.quantity, totalStock: item.quantity },
+      },
+    );
+  }
+
+  order.orderStatus = 'cancelled';
+  await order.save();
+
+  res.json({ success: true, message: 'Đã hủy đơn hàng thành công.' });
 });
