@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: football-shoes-shop-api
+    env: node
+    # Since it's a monorepo with client and server, we specify rootDir if needed,
+    # or just use cd commands. Using rootDir is cleaner for Render.
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5001
+      - key: MONGO_CONNECT_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CLIENT_URL
+        sync: false
