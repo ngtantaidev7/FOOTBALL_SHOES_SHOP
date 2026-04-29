@@ -22,6 +22,29 @@ app.use(express.urlencoded({ extended: true }));
 connectDB();
 
 // ── Routes ────────────────────────────────────────────────────────
+app.get('/api/test-email', async (req, res) => {
+  try {
+    const nodemailer = await import('nodemailer');
+    const transporter = nodemailer.default.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+    const info = await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER,
+      subject: "Test Render Email",
+      text: "Works!"
+    });
+    res.json({ success: true, info });
+  } catch (error) {
+    res.json({ success: false, error: error.toString(), user: process.env.EMAIL_USER || 'MISSING_USER', pass: process.env.EMAIL_PASS ? 'HAS_PASS' : 'MISSING_PASS' });
+  }
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
