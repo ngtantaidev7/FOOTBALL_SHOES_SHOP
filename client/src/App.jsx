@@ -18,6 +18,12 @@ import AdminOrdersPage from './pages/AdminOrdersPage';
 import AdminProductsPage from './pages/AdminProductsPage';
 import AdminCustomersPage from './pages/AdminCustomersPage';
 import AdminReportsPage from './pages/AdminReportsPage';
+import ReturnPolicyPage from './pages/ReturnPolicyPage';
+import SizeGuidePage from './pages/SizeGuidePage';
+import ContactPage from './pages/ContactPage';
+import FAQPage from './pages/FAQPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfUsePage from './pages/TermsOfUsePage';
 
 export default function App() {
   return (
@@ -41,6 +47,14 @@ export default function App() {
           <Route path='/admin/products' element={<AdminProductsPage />} />
           <Route path='/admin/customers' element={<AdminCustomersPage />} />
           <Route path='/admin/reports' element={<AdminReportsPage />} />
+          
+          {/* Support & Legal Routes */}
+          <Route path='/return-policy' element={<ReturnPolicyPage />} />
+          <Route path='/size-guide' element={<SizeGuidePage />} />
+          <Route path='/contact' element={<ContactPage />} />
+          <Route path='/faq' element={<FAQPage />} />
+          <Route path='/privacy-policy' element={<PrivacyPolicyPage />} />
+          <Route path='/terms-of-use' element={<TermsOfUsePage />} />
         </Routes>
       </main>
       <Footer />

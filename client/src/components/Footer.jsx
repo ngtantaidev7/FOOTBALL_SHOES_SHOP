@@ -1,9 +1,23 @@
 import { Link } from 'react-router-dom';
 
 const links = {
-  'Sản phẩm': ['Phantom', 'Mercurial', 'Tiempo', 'Vapor'],
-  'Loại sân': ['Sân cỏ tự nhiên (FG)', 'Sân nhân tạo (AG)', 'Sân cứng (TF)'],
-  'Hỗ trợ': ['Chính sách đổi trả', 'Hướng dẫn chọn size', 'Liên hệ', 'FAQ'],
+  'Sản phẩm': [
+    { name: 'Phantom', path: '/shop?brand=phantom' },
+    { name: 'Mercurial', path: '/shop?brand=mercurial' },
+    { name: 'Tiempo', path: '/shop?brand=tiempo' },
+    { name: 'Vapor', path: '/shop?brand=vapor' }
+  ],
+  'Loại sân': [
+    { name: 'Sân cỏ tự nhiên (FG)', path: '/shop?surface=fg' },
+    { name: 'Sân nhân tạo (AG)', path: '/shop?surface=ag' },
+    { name: 'Sân cứng (TF)', path: '/shop?surface=tf' }
+  ],
+  'Hỗ trợ': [
+    { name: 'Chính sách đổi trả', path: '/return-policy' },
+    { name: 'Hướng dẫn chọn size', path: '/size-guide' },
+    { name: 'Liên hệ', path: '/contact' },
+    { name: 'FAQ', path: '/faq' }
+  ],
 };
 
 export default function Footer() {
@@ -52,12 +66,12 @@ export default function Footer() {
               </h4>
               <ul className='space-y-2'>
                 {items.map((item) => (
-                  <li key={item}>
+                  <li key={item.name}>
                     <Link
-                      to='/shop'
+                      to={item.path}
                       className='text-zinc-400 text-sm hover:text-white transition'
                     >
-                      {item}
+                      {item.name}
                     </Link>
                   </li>
                 ))}
@@ -72,12 +86,12 @@ export default function Footer() {
             reserved.
           </p>
           <div className='flex gap-4'>
-            <a href='#' className='hover:text-white transition'>
+            <Link to='/privacy-policy' className='hover:text-white transition'>
               Chính sách bảo mật
-            </a>
-            <a href='#' className='hover:text-white transition'>
+            </Link>
+            <Link to='/terms-of-use' className='hover:text-white transition'>
               Điều khoản sử dụng
-            </a>
+            </Link>
           </div>
         </div>
       </div>
