@@ -26,13 +26,19 @@ export default function Footer() {
               độ, kiểm soát, đỉnh cao.
             </p>
             <div className='flex gap-3 mt-5'>
-              {['f', 'in', 'yt'].map((s) => (
+              {[
+                { name: 'f', url: 'https://www.facebook.com/taif.sthamp/' },
+                { name: 'in', url: 'https://www.instagram.com/ngyn.t.tai/' },
+                { name: 'yt', url: 'https://www.youtube.com/@Onfeet.review' }
+              ].map((s) => (
                 <a
-                  key={s}
-                  href='#'
+                  key={s.name}
+                  href={s.url}
+                  target='_blank'
+                  rel='noopener noreferrer'
                   className='w-9 h-9 rounded-full border border-zinc-700 flex items-center justify-center hover:border-white hover:bg-white hover:text-black transition text-zinc-400 text-sm font-bold'
                 >
-                  {s}
+                  {s.name}
                 </a>
               ))}
             </div>
