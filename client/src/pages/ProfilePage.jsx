@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import stadiumBg from '../assets/stadium-bg.png';
 
 const API_PROVINCES = 'https://provinces.open-api.vn/api';
 
@@ -164,10 +165,10 @@ export default function ProfilePage() {
   return (
     <div className='min-h-screen bg-[#F0F2F5] pb-24'>
       {/* Header Banner */}
-      <div className='relative h-[450px] overflow-hidden flex items-center justify-center'>
+      <div className='relative h-[450px] overflow-hidden flex items-center justify-center bg-black'>
         <div 
-          className='absolute inset-0 bg-cover bg-center scale-110 blur-sm brightness-50' 
-          style={{ backgroundImage: `url('/profile_banner.png')` }}
+          className='absolute inset-0 bg-cover bg-center opacity-80' 
+          style={{ backgroundImage: `url(${stadiumBg})` }}
         />
         <div className='absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-[#F0F2F5]' />
         
