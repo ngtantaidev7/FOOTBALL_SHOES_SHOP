@@ -90,7 +90,7 @@ const productSchema = new mongoose.Schema(
 );
 
 // ── Pre-save: tạo slug + tính totalStock ─────────────────────────
-productSchema.pre('save', function (next) {
+productSchema.pre('save', function () {
   if (this.isModified('name')) {
     // Basic slug generation + append small random string to avoid duplicate errors naturally if name is same
     let baseSlug = this.name.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
@@ -98,14 +98,13 @@ productSchema.pre('save', function (next) {
        this.slug = baseSlug + '-' + Math.random().toString(36).substring(2, 6);
     }
   }
-  
+
   // Auto generate SKU if empty
   if (!this.sku && this.isNew) {
     this.sku = `NK-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
   }
 
   this.totalStock = this.sizes.reduce((sum, s) => sum + s.stock, 0);
-  next();
 });
 
 // ── Virtual: % giảm giá ──────────────────────────────────────────
